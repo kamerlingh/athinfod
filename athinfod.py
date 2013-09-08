@@ -58,22 +58,16 @@ def get_definition(query):
     get_query_access("/etc/athena/athinfo.access", queries)
     if query not in queries:
         raise Exception('unknown query "%s"' % (query,))
-    query_entry = queries[query]
-    if query_entry[1] != True:
+    cmd, enabled = queries[query]
+    if not enabled:
         raise Exception('query "%s" is disabled' % (query,))
-    return query_entry[0]
-
-def execute(path, args):
-    try:
-        os.execv(path, args)
-    except OSError as e:
-        return e.errno
+    return cmd
 
 def main():
     query = read_query()
     shutdown_input()
     cmd = get_definition(query)
-    execute("/bin/sh", ['sh', '-c', cmd])
+    os.execv("/bin/sh", ['sh', '-c', cmd])
 
 if __name__ == '__main__':
     try:
