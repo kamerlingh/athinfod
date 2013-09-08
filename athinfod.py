@@ -10,8 +10,7 @@ EXTENDED_DEFINITIONS = '/etc/athena/athinfo.defs.d/'
 
 def read_query():
     line = sys.stdin.readline().strip()
-    bad_chars = [x for x in line if x not in string.printable]
-    if len(bad_chars) > 0:
+    if any(x not in string.printable for x in line):
         raise Exception('invalid query')
     return line
 
@@ -28,7 +27,7 @@ def get_definitions_from_file(queries, filepath):
     with open(filepath, "r") as defs:
         for line in defs:
             line = line.strip()
-            if len(line) == 0 or line.startswith('#'):
+            if not line or line.startswith('#'):
                 continue
             (query, shell_command) = string.split(line, maxsplit=1)
             queries[query] = [shell_command, False]
