@@ -1,8 +1,12 @@
 #!/usr/bin/python
+import fnmatch
 import os
 import socket
 import string
 import sys
+
+BASE_DEFINITIONS = '/etc/athena/athinfo.defs'
+EXTENDED_DEFINITIONS = '/etc/athena/athinfo.defs.d/'
 
 def read_query():
     line = sys.stdin.readline().strip()
@@ -20,8 +24,7 @@ def shutdown_input():
         os.dup2(fd, std_in)
         os.close(fd)
 
-def get_definitions_from_file(filepath):
-    queries = {}
+def get_definitions_from_file(queries, filepath):
     with open(filepath, "r") as defs:
         for line in defs:
             line = line.strip()
@@ -47,7 +50,12 @@ def get_query_access(filepath, queries):
                     queries[key][1] = enablement[action]
 
 def get_definition(query):
-    queries = get_definitions_from_file("/etc/athena/athinfo.defs")
+    queries = {}
+    get_definitions_from_file(queries, BASE_DEFINITIONS)
+    for candidate in os.listdir(EXTENDED_DEFINITIONS):
+        if fnmatch.fnmatch(candidate, '*.defs'):
+            get_definitions_from_file(queries, os.path.join(
+                    EXTENDED_DEFINITIONS, candidate))
     get_query_access("/etc/athena/athinfo.access", queries)
     if query not in queries:
         raise Exception('unknown query "%s"' % (query,))
